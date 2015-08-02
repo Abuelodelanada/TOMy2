@@ -3,5 +3,6 @@ Pygments==2.0.2
 colorize==1.0.4
 prompt-toolkit==0.43
 six==1.9.0
+tabulate==0.7.5
 termcolor==1.1.0
 wcwidth==0.1.4
