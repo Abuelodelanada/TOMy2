@@ -82,7 +82,19 @@ class TOMy:
             db = self.args.database,
             cursorclass=pymysql.cursors.DictCursor
         )
-        print(self.connection)
+        self.server_info()
+
+
+    def server_info(self):
+        """
+        Shows the server info
+        """
+        server_version = self.connection.server_version
+        server_host = self.connection.host
+
+        print('.:: Server engine: %s' % colored('MySQL', 'green'))
+        print('.:: Server version: %s' % colored(server_version, 'green'))
+        print('.:: Server host: %s' % colored(server_host, 'green'))
 
 
     def None2NULL(self, none):
