@@ -44,7 +44,6 @@ class TOMy:
         self.database = db
         self.connect()
         self.get_welcome()
-        print(self.prompt)
 
 
     def arguments(self):
@@ -100,7 +99,6 @@ class TOMy:
             user,
             host,
             db)
-
         self.server_info()
 
 
@@ -203,27 +201,29 @@ class TOMy:
 
         while True:
             try:
-                text = get_input('> ', lexer=SqlLexer, completer=sql_completer, style=DocumentStyle, history=history)
+                print(self.prompt)
+                text = get_input('► ', lexer=SqlLexer, completer=sql_completer, style=DocumentStyle, history=history)
 
             except EOFError:
                 break  # Control-D pressed.
 
             with self.connection.cursor() as cursor:
-                messages = cursor.execute(text)
-                fetchall = cursor.fetchall()
-                result = []
-                description = cursor.description
-                headers = []
-                rowcount = cursor.rowcount
+                if text and text.endswith(';'):
+                    messages = cursor.execute(text)
+                    fetchall = cursor.fetchall()
+                    result = []
+                    description = cursor.description
+                    headers = []
+                    rowcount = cursor.rowcount
 
-                for i in description:
-                    headers.append(i[0])
+                    for i in description:
+                        headers.append(i[0])
 
-                for record in fetchall:
-                    result.append([self.None2NULL(record[d]) for d in headers])
+                        for record in fetchall:
+                            result.append([self.None2NULL(record[d]) for d in headers])
 
-                print(tabulate(result, headers, tablefmt="grid"))
-                print(str(rowcount) + ' rows\n')
+                        print(tabulate(result, headers, tablefmt="grid"))
+                        print(str(rowcount) + ' rows\n')
 
 
         print('GoodBye!')
