@@ -33,11 +33,18 @@ class DocumentStyle(Style):
 
 class TOMy:
 
+    version = '0.1'
+    connection_data = {'host': '', 'user': '', 'pass': '',
+                       'database': '', 'port': 3306, 'conn': '',
+                       'engine': '', 'autocommit': 'ON'}
+
     def __init__(self, db):
         """Constructor"""
         self.arguments()
         self.database = db
         self.connect()
+        self.get_welcome()
+        print(self.prompt)
 
 
     def arguments(self):
@@ -75,15 +82,91 @@ class TOMy:
 
 
     def connect(self):
+
+        host = self.args.host
+        user = self.args.user
+        passwd = self.args.password
+        db = self.args.database
+
         self.connection = pymysql.connect(
-            host = self.args.host,
-            user = self.args.user,
-            passwd = self.args.password,
-            db = self.args.database,
+            host,
+            user,
+            passwd,
+            db,
             cursorclass=pymysql.cursors.DictCursor
         )
+
+        self.prompt = self.get_prompt(
+            user,
+            host,
+            db)
+
         self.server_info()
 
+
+    def get_welcome(self):
+        welcome = '.:: Welcome to TOMy %s!' % (self.version)
+        print(welcome)
+
+
+    def get_prompt(self, user, host, database='None', autocommit='ON'):
+        """
+        Get a prompt
+        """
+        # Custom settings if you don't have set up in .config file
+        prompt_config_dict = {'show_user': 'false', 'show_host': 'false',
+                              'show_db': 'false', 'prompt_char': '>>>'}
+
+        self.connection_data['host'] = host
+        self.connection_data['user'] = user
+        self.connection_data['database'] = database
+        self.connection_data['autocommit'] = autocommit
+
+        if(user == 'root'):
+            user = colored(user, 'red')
+
+        if(autocommit.upper() == 'ON'):
+            autocommit = colored(autocommit, 'red')
+        else:
+            autocommit = colored(autocommit, 'green')
+
+        try:
+            prompt_config = configparser.ConfigParser()
+            prompt_config.read('.config')
+            prompt_config_dict['show_user'] = prompt_config.get('prompt',
+                                                                "show_user"
+                                                               ).lower()
+            prompt_config_dict['show_host'] = prompt_config.get('prompt',
+                                                                "show_host"
+                                                               ).lower()
+            prompt_config_dict['show_db'] = prompt_config.get('prompt',
+                                                              "show_db"
+                                                             ).lower()
+            prompt_config_dict['prompt_char'] = prompt_config.get('prompt',
+                                                                "prompt_char")
+        except:
+            # TODO: use exceptions in a decent way
+            logging.error('Wrong section definition')
+
+        prompt = 'conn: %s\n' % self.connection_data['conn']
+        prompt = prompt + 'AutoCommit: %s\n'\
+                 % (autocommit)
+        if(prompt_config_dict['show_user'] == 'true'):
+            if(prompt_config_dict['show_host'] == 'true'):
+                prompt = '%s<%s@%s>' % (prompt, user, host)
+            else:
+                prompt = '%s<%s>' % (prompt, user)
+        else:
+            if(prompt_config_dict['show_host'] == 'true'):
+                prompt = '%s<%s>' % (prompt, host)
+            else:
+                pass
+
+        if(prompt_config_dict['show_db'] == 'true'):
+            prompt = '%s [%s] ' % (prompt, database)
+
+        prompt = prompt + prompt_config_dict['prompt_char'] + ' '
+        return prompt
 
     def server_info(self):
         """
